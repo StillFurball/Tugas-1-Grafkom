@@ -81,7 +81,7 @@ const circleVertices = [0.72, 0.78]; // center
 for (let i = 0; i <= circleSegments; i++) {
   const angle = (i / circleSegments) * Math.PI * 2;
   circleVertices.push(
-    0.72 + Math.cos(angle) * 0.18,
+    0.72 + Math.cos(angle) * 0.12,
     0.78 + Math.sin(angle) * 0.18
   );
 }
@@ -146,7 +146,33 @@ const vertices = new Float32Array([
   -0.50,-0.25,
   -0.61, -0.55,
 
-  // burung
+  // jendela rumah kanan
+  -0.28, -0.72,
+  -0.22, -0.72,
+  -0.22, -0.64,
+  -0.28, -0.64,
+
+  // pintu rumah kanan
+  -0.19, -0.80,
+  -0.12, -0.80,
+  -0.12, -0.64,
+  -0.19, -0.64,
+
+  // tiga jendela rumah kiri
+  -0.58, -0.617,
+  -0.52, -0.627,
+  -0.52, -0.707,
+  -0.58, -0.697,
+
+  -0.49, -0.632,
+  -0.43, -0.642,
+  -0.43, -0.722,
+  -0.49, -0.712,
+
+  -0.40, -0.647,
+  -0.34, -0.657,
+  -0.34, -0.737,
+  -0.40, -0.727,
 
   
   ...circleVertices,
@@ -155,6 +181,8 @@ const vertices = new Float32Array([
 
 ]);
 
+const circleStart =
+  (vertices.length - circleVertices.length - wingsRaised.length - wingsFlat.length) / 2;
 
 
 
@@ -203,7 +231,7 @@ const objectBird1 = {
 }
 
 const objectBird2 = {
-  x: -0.9 ,
+  x: -1.5,
   y: .9,
   rotation: 0.0,
   scaleX: 1,
@@ -257,6 +285,11 @@ const coklat = new Float32Array([0.48, 0.22, 0.16,1.0])
 const kuning = new Float32Array([1.0, 1.0, 0.05, 1.0])
 const biru_langit = new Float32Array([0.42, 0., 0.02, 1.0])
 const ijo_tanah = new Float32Array([0.56, 1.0, 0.34, 1.0])
+const colorHouse = new Float32Array([1, 1, 1, 1.0]);
+const colorRoof = new Float32Array([1, 0, 0, 1.0]);
+const colorDoorWindow = new Float32Array([1.0, 0.95, 0.65, 1.0]);
+const colorRoad = new Float32Array([0.3, 0.3, 0.4, 1.0]);
+
 
 const keys = {};
 const positionInfo = document.getElementById("positionInfo");
@@ -351,7 +384,7 @@ function updateSun(dt) {
 
   if (objectMatahari.y > sunCycle.topY+0.2) {
     objectMatahari.y = sunCycle.bottomY;
-  }
+  } 
 }
 
 function getSkyColor() {
@@ -375,9 +408,24 @@ function getSkyColor() {
   return skyColors[colorIndex];
 }
 
-function updateBirdWing(dt, birdobj) {
-
+function drawObject3(matrix, color, idx) {
+  gl.uniformMatrix3fv(matrixLocation, false, matrix);
+  gl.uniform4fv(colorLocation, color);
+  gl.drawArrays(gl.LINE_LOOP, idx, 3);
 }
+
+function drawFilledObject3(matrix, color, idx) {
+  gl.uniformMatrix3fv(matrixLocation, false, matrix);
+  gl.uniform4fv(colorLocation, color);
+  gl.drawArrays(gl.TRIANGLE_FAN, idx, 3);
+}
+
+function drawFilledRectacle(matrix, color, idx) {
+  gl.uniformMatrix3fv(matrixLocation, false, matrix);
+  gl.uniform4fv(colorLocation, color);
+  gl.drawArrays(gl.TRIANGLE_FAN, idx, 4);
+}
+
 
 function update(dt) {
   updateTranslation(dt);
@@ -489,12 +537,12 @@ function drawScene(seconds) {
       x: objectBird2.x,
       y: objectBird2.y,
       rotation: 0,
-      scaleX: 0.8,
-      scaleY: 0.8,
+      scaleX: 0.6,
+      scaleY: 0.6,
     });
 
 
-  const raisedWing = 29 + circleVertices.length / 2;
+  const raisedWing = circleStart + circleVertices.length / 2;
   const flatWing = raisedWing + wingsRaised.length / 2;
   
   let usedWingType = raisedWing
@@ -512,7 +560,7 @@ function drawScene(seconds) {
 
 
   // matahari
-  drawCircle(matrixMatahari, kuning, 29, circleVertices.length / 2);
+  drawCircle(matrixMatahari, kuning, circleStart, circleVertices.length / 2);
   
 
   // burung
@@ -538,13 +586,27 @@ function drawScene(seconds) {
     });
     
     drawLine(matrixPadi, colorC, 15, 3);
+
+
+    
   }
 
+
   // rumah
+  drawFilledRectacle(matrixA, colorHouse, 18);
+  drawFilledRectacle(matrixA, colorHouse, 20);
   drawRectacle(matrixA, colorC, 18);
   drawRectacle(matrixA, colorC, 20);
-  drawObject(matrixA, colorC, 24);
+  drawObject3(matrixA, colorC, 24);
+  drawFilledObject3(matrixA, colorRoof, 24);
   drawRectacle(matrixA, colorC, 25);
+  drawFilledRectacle(matrixA, colorRoof, 25);
+
+  // pintu dan jendela
+  for (const index of [29, 33, 37, 41, 45]) {
+    drawFilledRectacle(matrixA, colorDoorWindow, index);
+    drawRectacle(matrixA, colorC, index);
+  }
 
 
 
