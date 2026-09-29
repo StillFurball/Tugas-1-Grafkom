@@ -1,44 +1,103 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebGL Primitive Playground</title>
+  <meta charset="UTF-8" />
 
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #111827;
-      color: white;
-      font-family: Arial, sans-serif;
-    }
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
-    canvas {
-      border: 1px solid #64748b;
-      background: white;
-    }
+  <title>
+    Interactive Transformation Playground
+  </title>
 
-    p {
-      margin-bottom: 8px;
-    }
-  </style>
+  <link
+    rel="stylesheet"
+    href="style.css"
+  />
 </head>
 
 <body>
-  <h1>WebGL Primitive Playground</h1>
-  <p id="info">Tugas — WebGL Fundamental</p>
 
-  <canvas
-    id="glCanvas"
-    width="900"
-    height="600">
-  </canvas>
+  <main class="app">
+    <header>
+      <h1>
+        Interactive Transformation Playground
+      </h1>
 
-  <script src="main.js"></script>
+      <p>
+        WebGL — Pertemuan 3
+      </p>
+    </header>
+
+    <canvas
+      id="glCanvas"
+      width="900"
+      height="600">
+    </canvas>
+
+    <section id="hud">
+      <div>
+        Position:
+        <span id="positionInfo"></span>
+      </div>
+
+      <div>
+        Rotation:
+        <span id="rotationInfo"></span>
+      </div>
+
+      <div>
+        Scale:
+        <span id="scaleInfo"></span>
+      </div>
+
+      <div>
+        Order:
+        <span id="orderInfo">
+          Scale → Rotate → Translate
+        </span>
+      </div>
+    </section>
+
+    <section class="controls">
+      <strong>Kontrol:</strong>
+
+      <span>
+        Arrow Keys = Move
+      </span>
+
+      <span>
+        Q/E = Rotate
+      </span>
+
+      <span>
+        +/- = Uniform Scale
+      </span>
+
+      <span>
+        Z/X = Scale X
+      </span>
+
+      <span>
+        C/V = Scale Y
+      </span>
+
+      <span>
+        R = Reset
+      </span>
+
+      <span>
+        1 2 3 = preset
+      </span>
+    </section>
+  </main>
+
+  <script
+    type="module"
+    src="./main.js">
+  </script>
+
 </body>
 </html>
