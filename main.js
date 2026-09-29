@@ -74,6 +74,32 @@ const program = createProgram(gl, vertexShader, fragmentShader);
 
 gl.useProgram(program);
 
+
+const circleSegments = 40;
+const circleVertices = [0.72, 0.78]; // center
+
+for (let i = 0; i <= circleSegments; i++) {
+  const angle = (i / circleSegments) * Math.PI * 2;
+  circleVertices.push(
+    0.72 + Math.cos(angle) * 0.18,
+    0.78 + Math.sin(angle) * 0.18
+  );
+}
+
+// Wings raised: V
+const wingsRaised = [
+  -0.16, 0.12,
+   0.00, 0.00,
+   0.16, 0.12,
+];
+
+// Wings flat: ----
+const wingsFlat = [
+  -0.16, 0.00,
+   0.00, 0.00,
+   0.16, 0.00,
+];
+
 const vertices = new Float32Array([
   //segitiga
   -0.18, -0.15,
@@ -119,9 +145,18 @@ const vertices = new Float32Array([
   -0.19, -0.3,
   -0.50,-0.25,
   -0.61, -0.55,
+
+  // burung
+
   
+  ...circleVertices,
+  ...wingsRaised,
+  ...wingsFlat,
 
 ]);
+
+
+
 
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -159,6 +194,23 @@ const objectGunung = {
   scaleY: 1.0,
 }
 
+const objectBird1 = {
+  x: 0.8 ,
+  y: .8,
+  rotation: 0.0,
+  scaleX: 1,
+  scaleY: 1.0,
+}
+
+const objectBird2 = {
+  x: -0.9 ,
+  y: .9,
+  rotation: 0.0,
+  scaleX: 1,
+  scaleY: 1.0,
+}
+
+
 const objectsPadi = [
   { x: 0.23, y: -0.15 },
   { x: 0.3, y: -0.35 },
@@ -176,9 +228,35 @@ const objectsPadi = [
   { x: 0.84, y: -0.75 },
 ];
 
+const sunCycle = {
+  bottomY: -1.3,
+  topY: 0.08,
+  speed: 0.22,
+};
+
+const objectMatahari = {
+  x: -0.77 ,
+  y: sunCycle.bottomY,
+  rotation: 0.0,
+  scaleX: 1,
+  scaleY: 1.0,
+}
+
+const objectGround = {
+  x: 0.2,
+  y: 0.622,
+  rotation: 0.0,
+  scaleX: 20  ,
+  scaleY: 9,
+}
+
 const colorA = new Float32Array([0.1, 0.75, 1.0, 1.0]);
 const colorB = new Float32Array([1.0, 0.55, 0.1, 1.0]);
 const colorC = new Float32Array([0, 0, 0, 1.0]);
+const coklat = new Float32Array([0.48, 0.22, 0.16,1.0])
+const kuning = new Float32Array([1.0, 1.0, 0.05, 1.0])
+const biru_langit = new Float32Array([0.42, 0., 0.02, 1.0])
+const ijo_tanah = new Float32Array([0.56, 1.0, 0.34, 1.0])
 
 const keys = {};
 const positionInfo = document.getElementById("positionInfo");
@@ -267,11 +345,46 @@ function updateNonUniformScale(dt) {
   if (keys["v"]) objectA.scaleY += scaleSpeed * dt;
 }
 
+function updateSun(dt) {
+  objectMatahari.y += sunCycle.speed * dt;
+  objectMatahari.x += sunCycle.speed * 0.1 * dt;
+
+  if (objectMatahari.y > sunCycle.topY+0.2) {
+    objectMatahari.y = sunCycle.bottomY;
+  }
+}
+
+function getSkyColor() {
+  const progress = Math.max(
+    0,
+    Math.min(1, (objectMatahari.y - sunCycle.bottomY) / (sunCycle.topY - sunCycle.bottomY))
+  );
+  const skyColors = [
+    [0.035, 0.08, 0.22],
+    [0.18, 0.20, 0.40],
+    [0.65, 0.30, 0.38],
+    [0.95, 0.48, 0.33],
+    [0.60, 0.65, 0.75],
+    [0.42, 0.78, 0.94],
+  ];
+  const colorIndex = Math.min(
+    skyColors.length - 1,
+    Math.floor(progress * skyColors.length)
+  );
+
+  return skyColors[colorIndex];
+}
+
+function updateBirdWing(dt, birdobj) {
+
+}
+
 function update(dt) {
   updateTranslation(dt);
   updateRotation(dt);
   updateUniformScale(dt);
   updateNonUniformScale(dt);
+  updateSun(dt);
   clampObjectA();
 }
 
@@ -296,6 +409,18 @@ function drawRectacle(matrix, color,idx) {
   gl.uniformMatrix3fv(matrixLocation, false, matrix);
   gl.uniform4fv(colorLocation, color);
   gl.drawArrays(gl.LINE_LOOP, idx, 4);
+}
+
+function drawFilledSquare(matrix, color, idx) {
+  gl.uniformMatrix3fv(matrixLocation, false, matrix);
+  gl.uniform4fv(colorLocation, color);
+  gl.drawArrays(gl.TRIANGLE_FAN, idx, 4);
+}
+
+function drawCircle(matrix, color, first, count) {
+  gl.uniformMatrix3fv(matrixLocation, false, matrix);
+  gl.uniform4fv(colorLocation, color);
+  gl.drawArrays(gl.TRIANGLE_FAN, first, count);
 }
 
 // function drawRectacle(matrix, color,idx, vertic) {
@@ -343,7 +468,7 @@ function getObjectCMatrix(objectC) {
 
 function drawScene(seconds) {
   gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.clearColor(1.00, 1.00, 1.00, 1.0);
+  gl.clearColor(...getSkyColor(), 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.useProgram(program);
 
@@ -351,22 +476,65 @@ function drawScene(seconds) {
   const matrixB = createObjectBMatrix(seconds);
   const matrixC = getObjectCMatrix(objectC);
   const matrixgunung = getObjectCMatrix(objectGunung);
+  const matrixMatahari = getObjectCMatrix(objectMatahari);
+  const matrixGround = getObjectCMatrix(objectGround);
+  const matrixBird1 = createTRSMatrix({
+      x: objectBird1.x,
+      y: objectBird1.y,
+      rotation: 0,
+      scaleX: 0.8,
+      scaleY: 0.8,
+    });
+  const matrixBird2 = createTRSMatrix({
+      x: objectBird2.x,
+      y: objectBird2.y,
+      rotation: 0,
+      scaleX: 0.8,
+      scaleY: 0.8,
+    });
 
+
+  const raisedWing = 29 + circleVertices.length / 2;
+  const flatWing = raisedWing + wingsRaised.length / 2;
+  
+  let usedWingType = raisedWing
+  // console.log(parseInt(seconds))
+  let second_wing_pos = 1
+  if (parseInt(seconds) % 2  === 0) {
+    console.log("h")
+    usedWingType = raisedWing
+  } else {
+    usedWingType = flatWing
+  }
   // drawObject(matrixA, colorA);
   // drawObject(matrixB, colorB);
   // drawRectacle(matrixC, colorC, 2);
-  drawObject(matrixgunung, colorC, 6);
-  drawObject(matrixgunung, colorC, 9);
-  drawLine(matrixgunung, colorC, 12, 3);
 
+
+  // matahari
+  drawCircle(matrixMatahari, kuning, 29, circleVertices.length / 2);
   
+
+  // burung
+  drawLine(matrixBird1, colorC, usedWingType, 3);
+  drawLine(matrixBird2, colorC, usedWingType, 3);
+
+  //tanah
+  drawFilledSquare(matrixGround, ijo_tanah, 18);
+
+  // gunung
+  drawObject(matrixgunung, coklat, 6);
+  drawObject(matrixgunung, coklat, 9);
+  drawLine(matrixgunung, coklat, 12, 3);
+
+  // padi
   for (const padi of objectsPadi) {
     const matrixPadi = createTRSMatrix({
       x: padi.x,
       y: padi.y,
       rotation: 0,
-      scaleX: 1,
-      scaleY: 1,
+      scaleX: 0.5,
+      scaleY: 0.5,
     });
     
     drawLine(matrixPadi, colorC, 15, 3);
@@ -377,6 +545,9 @@ function drawScene(seconds) {
   drawRectacle(matrixA, colorC, 20);
   drawObject(matrixA, colorC, 24);
   drawRectacle(matrixA, colorC, 25);
+
+
+
 }
 
 window.addEventListener("keydown", (event) => {
